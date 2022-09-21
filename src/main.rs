@@ -1,3 +1,6 @@
+//! Runs cargo test and converts its output into a xunit report.
+#![warn(missing_docs)]
+
 extern crate sxd_document;
 extern crate getopts;
 
@@ -12,7 +15,7 @@ use getopts::Options;
 use std::env;
 use std::fs::DirBuilder;
 
-
+/// CLI entry point
 fn main() {
 
     // Read args and prepare vars
