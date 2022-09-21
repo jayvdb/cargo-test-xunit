@@ -12,7 +12,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       # coverage action needs a nightly toolchain
       # @Swatinem/fucov needs with llvm-tools
@@ -35,16 +37,24 @@ jobs:
           RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
           RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
 
-      - id: coverage
+      - name: Run coverage
+        id: coverage
         uses: actions-rs/grcov@v0.1
 
-      - name: Install deepsource CLI
+      - name: Fix coverage action output
+        id: strip-linefeed
         run: |
-          curl https://deepsource.io/cli | sh
+          export stripped=$(echo ${{ steps.coverage.outputs.report }} | tr -d '\n')
+          echo ::set-output name=filename::$stripped
 
-      - name: Submit code coverage
-        env:
-          DEEPSOURCE_DSN: ${{ secrets.DEEPSOURCE_DSN }}
+      - name: Move coverage file
         run: |
-          # From the root directory, run the report coverage command
-          ./bin/deepsource report --analyzer test-coverage --key rust --value-file ${{ steps.coverage.outputs.report }}
+          mv ${{ steps.strip-linefeed.outputs.filename }} ./coverage.xml
+
+      - name: Report test coverage to DeepSource
+        uses: deepsourcelabs/test-coverage-action@master
+        with:
+          key: rust
+          coverage-file: coverage.xml
+          dsn: ${{ secrets.DEEPSOURCE_DSN }}
+          fail-ci-on-error: true
