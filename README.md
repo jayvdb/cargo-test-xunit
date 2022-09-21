@@ -1,16 +1,14 @@
 # cargo-test-xunit
 Converts cargo test output into a xunit report
 
-## No maintenance warning
+## Maintenance warning
 
-```diff
-- We stopped to use and support this project. If you think it is useful the best way to proceed is forking.
-```
+This is a fork of https://github.com/DSRCorporation/cargo-test-xunit , which has become unmaintained.
 
 ## Install
 
 ```sh
-cargo install --git https://github.com/DSRCorporation/cargo-test-xunit
+cargo install --git https://github.com/jayvdb/cargo-test-xunit
 ```
 
 ## Run
