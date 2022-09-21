@@ -1,0 +1,50 @@
+---
+name: Test
+"on":
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      # coverage action needs a nightly toolchain
+      # @Swatinem/fucov needs with llvm-tools
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          # components: llvm-tools-preview
+
+      # runs cargo with defaults flags, using the default `lcov` output
+      # uses: Swatinem/fucov@v1
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features --no-fail-fast  # Customize args for your own needs
+        env:
+          CARGO_INCREMENTAL: '0'
+          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort -Zpanic_abort_tests'
+
+      - id: coverage
+        uses: actions-rs/grcov@v0.1
+
+      - name: Install deepsource CLI
+        run: |
+          curl https://deepsource.io/cli | sh
+
+      - name: Submit code coverage
+        env:
+          DEEPSOURCE_DSN: ${{ secrets.DEEPSOURCE_DSN }}
+        run: |
+          # From the root directory, run the report coverage command
+          ./bin/deepsource report --analyzer test-coverage --key rust --value-file ${{ steps.coverage.outputs.report }}
