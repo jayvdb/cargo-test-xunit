@@ -66,3 +66,21 @@ pub fn parse_test_report(output: Output) -> TestReport {
         name: suite_name["suite_name"].to_string()
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::os::unix::process::ExitStatusExt;
+    #[test]
+    fn parse_output() {
+        let sample_output  = Output { status: ExitStatusExt::from_raw(0), stdout: "
+        running 1 test
+        test parser::tests::parse_output ... ok
+
+        test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+        ".into(),
+        stderr: "Running unittests src/main.rs (target/debug/deps/cargo_test_xunit-ead84dd071f7e886)".into() };
+        parse_test_report(sample_output);
+    }
+}
